@@ -1,9 +1,11 @@
 import os
 
-from flask import Flask, session, render_template, request
+from flask import Flask, session, render_template, request, flash
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 # set database url
@@ -39,9 +41,9 @@ def login():
                                     {"username": username})
         result = rows.fetchone()
 
-        # Check if username and password are correct
-        #if result[0] == None
-            #return render_template("error.html", message="invalid username and/or password")
+        # Check if username and password are correct, display error if not
+        if result == None or not check_password_hash(result[1], request.form.get("password")):
+            return render_template("error.html", message="invalid username and/or password")
 
         #If login successful, remember user session
         session["username"] = result[0]
@@ -67,15 +69,19 @@ def register():
         #show error if not unique
         if unique:
             return render_template("error.html", message="username not available")
+
+        #hash the password
+        hashedPassword = generate_password_hash(request.form.get("password"), method='pbkdf2:sha256', salt_length=8)
         #send data to the database
         db.execute("INSERT INTO webuser (username, password, firstname, lastname) VALUES (:username, :password, :fname, :lname)",
                         {"username":request.form.get("username"),
-                         "password":request.form.get("password"),
+                         "password":hashedPassword,
                          "fname":request.form.get("fname"),
                          "lname":request.form.get("lname"),
                          })
         #Save changes
         db.commit()
+        flash('Account created')
         return render_template("index.html")
 
     else:
@@ -86,7 +92,6 @@ def register():
 def logout():
     #clear the session
     session.clear()
-
     #go back to logon/home page
     return render_template("index.html")
 
