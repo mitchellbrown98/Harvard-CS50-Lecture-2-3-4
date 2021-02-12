@@ -24,10 +24,12 @@ Session(app)
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
 
+
 # Start at the login/register page
 @app.route("/")
 def home():
     return render_template("index.html")
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
