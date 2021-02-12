@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block heading %}
+   Login
+{% endblock %}
+
+{% block body %}
+  <form action="{{ url_for('login') }}" method="post">
+    <input type="text" id=user_input name="username" placeholder="Enter username">
+    <input type="password" id=user_pass name="passw" placeholder="Enter password">
+    <input type="submit" id="login" value="Login" disabled value="login" />
+  </form>
+  <br>
+  <a href="/register">Register for an account</a>
+
+
+  <script>
+    //used to keep the login button disabled until all fields have been filled in
+    $('#user_input, #user_pass').bind('keyup', function() {
+    if(allFilled()) $('#login').removeAttr('disabled');
+    });
+
+    function allFilled() {
+    var filled = true;
+    $('body input').each(function() {
+        if($(this).val() == '') filled = false;
+    });
+    return filled;
+    }
+
+</script>
+
+{% endblock %}
