@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, session, render_template, request, flash
+from flask import Flask, session, render_template, request, flash, redirect, url_for
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -30,6 +30,10 @@ db = scoped_session(sessionmaker(bind=engine))
 def home():
     return render_template("index.html")
 
+@app.route("/user")
+def user():
+    return render_template("hello.html", user=session["username"])
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -51,7 +55,9 @@ def login():
         session["username"] = result[0]
 
         # Redirect user to home page
+
         return render_template("hello.html", user=session["username"])
+        #return redirect(url_for('user')
 
     else:
         return render_template("index.html")
@@ -83,7 +89,7 @@ def register():
                          })
         #Save changes
         db.commit()
-        flash('Account created')
+        flash('Account created', 'success')
         return render_template("index.html")
 
     else:
@@ -98,9 +104,35 @@ def logout():
     return render_template("index.html")
 
 
-@app.route("/hello", methods=["POST"])
-def hello():
-    name=request.form.get("name")
-    username=request.form.get("username")
-    password=request.form.get("password")
-    return render_template("hello.html", name=name, username=username, password=password)
+@app.route("/search", methods=["POST"])
+def search():
+
+    searchtext = "%" + request.form.get("searchinput") + "%"
+    searchtext = searchtext.title()
+    #search for books based on isbn, author, title compared to similar text
+    books = db.execute("SELECT isbn, title, author, year FROM books WHERE \
+                        isbn LIKE :searchtext OR \
+                        title LIKE :searchtext OR \
+                        author LIKE :searchtext",
+                        {"searchtext": searchtext})
+
+    if books.rowcount == 0:
+        return render_template("error2.html", message="No results found")
+
+    booklist = books.fetchall()
+    return render_template("results.html", booklist=booklist)
+
+
+@app.route("/<isbn>", methods=["POST", "GET"])
+def bookinfo(isbn):
+    bookid=isbn
+    #store username incase they post/have posted a review
+    username = session["username"]
+    #Search book by isbn
+    row = db.execute("SELECT isbn, title, author, year FROM books WHERE \
+                        isbn = :isbn",
+                        {"isbn": bookid})
+
+    bookinfo = row.fetchall()
+
+    return render_template("book.html", bookinfo=bookinfo)

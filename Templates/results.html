@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block top %}
+<a href="/logout" class="btn btn-outline-dark btn active" role="button">Logout</a>
+<a href="/user" class="btn btn-outline-dark btn active" role="button">Search</a>
+{% endblock %}
+
+{% block heading %}
+   Search Results
+{% endblock %}
+
+{% block body %}
+
+<ul style="list-style: none;">
+  {% for book in booklist %}
+  <li> <a href="/{{book['isbn']}}" > {{ book['title'] }} By {{ book['author'] }}  </a> </li>
+  {% endfor %}
+</ul>
+<br>
+<a href="/user" class="btn btn-outline-dark btn active" role="button">Return to Search</a>
+
+{% endblock %}
