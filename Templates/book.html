@@ -12,9 +12,56 @@
     Author: {{ bookinfo[0]['author'] }}<br>
     ISBN: {{ bookinfo[0]['isbn'] }}<br>
     Year: {{ bookinfo[0]['year'] }}<br>
-    <br>
+    <br><br>
+
+    <table class="center" width="80%">
+      <tr>
+        <th>User</th>
+        <th>Review</th>
+        <th>Rating (1-5)</th>
+      </tr>
+      {% for r in reviews %}
+      <tr>
+        <td>{{r['username']}}</td>
+        <td>{{r['review']}}</td>
+        <td>{{r['rating']}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+
+
+
+    <form action="/{{bookinfo[0]['isbn']}}" method="post">
+      <input type="text" id=comments name="comments" placeholder="Write Review here">
+      <select id="rating" name="rating" placeholder="Enter Rating">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+      <input type="submit" class="btn btn-outline-dark btn active" role="button" id="submit" value="Submit" disabled value="Submit" />
+    </form>
+    <br><br>
 
 
 <a href="/user" class="btn btn-outline-dark btn active" role="button">Return to Search</a>
+
+<script>
+  //used to keep the login button disabled until all fields have been filled in
+  $('#comments').bind('keyup', function() {
+  if(allFilled()) $('#submit').removeAttr('disabled');
+  });
+
+  function allFilled() {
+  var filled = true;
+  $('body input').each(function() {
+      if($(this).val() == '') filled = false;
+  });
+  return filled;
+  }
+
+</script>
 
 {% endblock %}

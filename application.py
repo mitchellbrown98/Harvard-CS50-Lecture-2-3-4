@@ -126,13 +126,44 @@ def search():
 @app.route("/<isbn>", methods=["POST", "GET"])
 def bookinfo(isbn):
     bookid=isbn
-    #store username incase they post/have posted a review
-    username = session["username"]
-    #Search book by isbn
-    row = db.execute("SELECT isbn, title, author, year FROM books WHERE \
+    if request.method == "GET":
+        #store username incase they post/have posted a review
+        username = session["username"]
+        #Search book by isbn
+        search = db.execute("SELECT isbn, title, author, year FROM books WHERE \
                         isbn = :isbn",
                         {"isbn": bookid})
 
-    bookinfo = row.fetchall()
+        bookinfo = search.fetchall()
 
-    return render_template("book.html", bookinfo=bookinfo)
+        reviews = db.execute ("SELECT * FROM reviews WHERE isbn = :isbn",
+                          {"isbn": bookid})
+
+        if reviews.rowcount == 0:
+            return render_template("book.html", bookinfo=bookinfo)
+
+        return render_template("book.html", bookinfo=bookinfo, reviews=reviews)
+
+    if request.method == "POST":
+        db.execute("INSERT INTO reviews (username, review, rating, isbn) VALUES (:username, :review, :rating, :isbn)",
+                    {"username":session["username"],
+                     "review":request.form.get("comments"),
+                     "rating":request.form.get("rating"),
+                     "isbn":bookid
+                        })
+        #Save changes
+        db.commit()
+        flash('Review submitted', 'success')
+        search = db.execute("SELECT isbn, title, author, year FROM books WHERE \
+                    isbn = :isbn",
+                    {"isbn": bookid})
+
+        bookinfo = search.fetchall()
+
+        reviews = db.execute ("SELECT * FROM reviews WHERE isbn = :isbn",
+                        {"isbn": bookid})
+
+        if reviews.rowcount == 0:
+            return render_template("book.html", bookinfo=bookinfo)
+
+        return render_template("book.html", bookinfo=bookinfo, reviews=reviews)
