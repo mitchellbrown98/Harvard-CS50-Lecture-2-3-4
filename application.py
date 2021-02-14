@@ -1,17 +1,17 @@
-import os
+import os, json
 
-from flask import Flask, session, render_template, request, flash, redirect, url_for
+from flask import Flask, session, render_template, request, flash
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
-app = Flask(__name__)
-# set database url
-DATABASE_URL='postgres://mtfhiiqwnhkwox:61b8344459c7c69313a726356526328b7cbc3238b4e3a1900f70efc40157dc78@ec2-18-204-74-74.compute-1.amazonaws.com:5432/dc6rki78aqhs9l'
+import requests
 
-# Check for environment variable
+app = Flask(__name__)
+
+# Check for environment variable s
 if not os.getenv("DATABASE_URL"):
     raise RuntimeError("DATABASE_URL is not set")
 
@@ -126,6 +126,20 @@ def search():
 @app.route("/<isbn>", methods=["POST", "GET"])
 def bookinfo(isbn):
     bookid=isbn
+    key = "AIzaSyCyfcKdwtREM6cGbHJzO-tp4hIkIYjaDjQ"
+
+    #Google Books api
+    #send request with the book isbn
+    res = requests.get("https://www.googleapis.com/books/v1/volumes",
+                params={"key": key, "q": bookid})
+    #convert the response to a Json object
+    rep = res.json()
+    #create object to store avg rating and rating count
+    Gbooks=[]
+    Gbooks.append(rep['items'][0]['volumeInfo']['averageRating'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['ratingsCount'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['imageLinks']['thumbnail'])
+
     if request.method == "GET":
         #Search book by isbn
         search = db.execute("SELECT isbn, title, author, year FROM books WHERE \
@@ -136,14 +150,15 @@ def bookinfo(isbn):
 
         reviews = db.execute ("SELECT * FROM reviews WHERE isbn = :isbn",
                           {"isbn": bookid})
-        #if no reviews found, display page without passing review array
+
+        #if no website reviews found, display page without passing review array
         if reviews.rowcount == 0:
-            return render_template("book.html", bookinfo=bookinfo)
+            return render_template("book.html", bookinfo=bookinfo, Gbooks=Gbooks)
 
-        return render_template("book.html", bookinfo=bookinfo, reviews=reviews)
+        return render_template("book.html", bookinfo=bookinfo, reviews=reviews, Gbooks=Gbooks)
 
+    #if user submits a review to the book page
     if request.method == "POST":
-
         #verify the user has not already submitted a review for this book
         unique = db.execute("SELECT * FROM reviews WHERE username = :username AND isbn = :isbn",
                           {"username":session["username"],
@@ -176,6 +191,45 @@ def bookinfo(isbn):
                         {"isbn": bookid})
 
         if reviews.rowcount == 0:
-            return render_template("book.html", bookinfo=bookinfo)
+            return render_template("book.html", bookinfo=bookinfo, Gbooks=Gbooks)
 
-        return render_template("book.html", bookinfo=bookinfo, reviews=reviews)
+        return render_template("book.html", bookinfo=bookinfo, reviews=reviews, Gbooks=Gbooks)
+
+
+@app.route("/api/<isbn>", methods=['GET'])
+def api_call(isbn):
+    bookid=isbn
+    key = "AIzaSyCyfcKdwtREM6cGbHJzO-tp4hIkIYjaDjQ"
+
+    #check if isbn exists in db, if not throw error
+    check = db.execute ("SELECT * FROM books WHERE isbn = :isbn",
+                    {"isbn": bookid})
+
+    if check.rowcount == 0:
+        return render_template("error2.html", message="ISBN does not exist in database"), 404
+
+    #Google Books api
+    #send request with the book isbn
+    res = requests.get("https://www.googleapis.com/books/v1/volumes",
+                params={"key": key, "q": bookid})
+    #convert the response to a Json object
+    rep = res.json()
+    isbns = rep['items'][0]['volumeInfo']['industryIdentifiers']
+
+
+    #create object to store avg rating and rating count
+    Gbooks=[]
+    Gbooks.append(rep['items'][0]['volumeInfo']['title'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['authors'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['publishedDate'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['industryIdentifiers'][0]['identifier'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['industryIdentifiers'][1]['identifier'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['ratingsCount'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['averageRating'])
+
+    # Convert to dictionary
+    #output = dict(Gbooks)
+    json_format = json.dumps(Gbooks)
+    print(json_format)
+
+    return jsonify(Gbooks)

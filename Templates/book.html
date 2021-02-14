@@ -5,15 +5,19 @@
 {% endblock %}
 
 {% block heading %}
-   {{ bookinfo[0]['title'] }}
+   {{ bookinfo[0]['title'] }}<br>
+  <img src="{{ Gbooks[2] }}" alt="No image available">
 {% endblock %}
 
 {% block body %}
     Author: {{ bookinfo[0]['author'] }}<br>
     ISBN: {{ bookinfo[0]['isbn'] }}<br>
-    Year: {{ bookinfo[0]['year'] }}<br>
+    Publication Year: {{ bookinfo[0]['year'] }}<br><br>
+    <b>From Google Books</b><br>
+    Average Rating (out of 5): {{ Gbooks[0] }} <br>
+    Number of Ratings: {{ Gbooks[1] }}
     <br><br>
-Reviews:<br>
+<b>Website Reviews:</b><br>
     <table class="center" width="80%">
       <tr>
         <th>User</th>
