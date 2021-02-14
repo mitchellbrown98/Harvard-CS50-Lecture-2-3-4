@@ -11,6 +11,7 @@ import requests
 
 
 app = Flask(__name__)
+#add so json object is sorted the way I type it
 app.config['JSON_SORT_KEYS'] = False
 
 # Check for environment variable s
