@@ -1,6 +1,6 @@
-import os, json
+import os
 
-from flask import Flask, session, render_template, request, flash
+from flask import Flask, session, render_template, request, flash, json, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -9,7 +9,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import requests
 
+
 app = Flask(__name__)
+app.config['JSON_SORT_KEYS'] = False
 
 # Check for environment variable s
 if not os.getenv("DATABASE_URL"):
@@ -206,7 +208,7 @@ def api_call(isbn):
                     {"isbn": bookid})
 
     if check.rowcount == 0:
-        return render_template("error2.html", message="ISBN does not exist in database"), 404
+        return render_template("error2.html", message="404 Error - ISBN not found"), 404
 
     #Google Books api
     #send request with the book isbn
@@ -214,22 +216,23 @@ def api_call(isbn):
                 params={"key": key, "q": bookid})
     #convert the response to a Json object
     rep = res.json()
-    isbns = rep['items'][0]['volumeInfo']['industryIdentifiers']
-
 
     #create object to store avg rating and rating count
     Gbooks=[]
     Gbooks.append(rep['items'][0]['volumeInfo']['title'])
-    Gbooks.append(rep['items'][0]['volumeInfo']['authors'])
+    Gbooks.append(rep['items'][0]['volumeInfo']['authors'][0])
     Gbooks.append(rep['items'][0]['volumeInfo']['publishedDate'])
     Gbooks.append(rep['items'][0]['volumeInfo']['industryIdentifiers'][0]['identifier'])
     Gbooks.append(rep['items'][0]['volumeInfo']['industryIdentifiers'][1]['identifier'])
     Gbooks.append(rep['items'][0]['volumeInfo']['ratingsCount'])
     Gbooks.append(rep['items'][0]['volumeInfo']['averageRating'])
 
-    # Convert to dictionary
-    #output = dict(Gbooks)
-    json_format = json.dumps(Gbooks)
-    print(json_format)
-
-    return jsonify(Gbooks)
+    return jsonify({
+    "title": Gbooks[0],
+    "author": Gbooks[1],
+    "publishedDate": Gbooks[2],
+    "ISBN_10": Gbooks[3],
+    "ISBN_13": Gbooks[4],
+    "reviewCount": Gbooks[5],
+    "averageRating": Gbooks[6]
+    })
