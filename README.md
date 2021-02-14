@@ -6,27 +6,26 @@ This file is the main python application used to run the backend of the website.
 There is a route for the home page where users can log on or register for an accouunt @app.route("/")
 - renders index.html
 
-There is a route to go through the login process @app.route("/login")
+There is a route to go through the login process: @app.route("/login")
 - Checks if the username/password is correct. Renders to hello.html if access granted.
 - If username/password is incorrect, error.html is rendered.
 
-There is a route to go through the registration process @app.route("/register")
+There is a route to go through the registration process: @app.route("/register")
 - Checks if the username is available or not. If not, error.html is rendered.
 - If username is unique, the password is hashed (method='pbkdf2:sha256', salt_length=8), and 
 all form field values, and the hashed password value is sent to the webuser table in the database.
 - After succesful registration, a success banner is shown and index.html is rendered to allow logon
 
-There is a route to log out @app.route("/logout")
+There is a route to log out: @app.route("/logout")
 - There is a logout button which simply clears the session info, and returns the user to the main logon page.
 
-There is a route to search for books @app.route("/search")
+There is a route to search for books: @app.route("/search")
 - Takes the search text and adds '%  %', and capitalizes it. A db query is performed to check for text similar
 to the user entry in the isbn, title, and author columns.
 - If no results are found, error2.html is rendered.
 - If results are found, they are passed to the results.html page and it is rendered.
 
-
-There is a route to navigate to a page for a selected book from the search results @app.route("/<isbn>")
+There is a route to navigate to a page for a selected book from the search results: @app.route("/<isbn>")
 - Upon clicking on a book result in the results.html page this route is called. 
 - url is just /<isbn> of book selected
 - a google book api call is performed, and the result is converted to a json object. 
@@ -43,7 +42,7 @@ if they have, error2.html is rendered and their review is not saved.
 is performed for the book to get the most recent review, and the page is reloaded to show their new review, along
 with any old ones. 
 
-There is a route for an API call to my website @app.route("/api/<isbn>")
+There is a route for an API call to my website: @app.route("/api/<isbn>")
 - Called if a url is typed in with an ISBN /api/<isbn>
 - If the isbn does not exist in my books table in the database, error2.html is rendered as a 404 error page.
 - If the isbn does exist, an api call is perfomed to google books to get the title, author, publishedDate, 
@@ -55,7 +54,9 @@ the array values.
 import.py:
 This file reads and imports the books.csv file to my 'books' database table
 
-Tempates:
+
+HTML FILES (in templates folder):
+
 layout.html - this file contains a basic layout and all styling elements for other html pages to use
 
 index.html - this is the home page where users can log in/register for an account
