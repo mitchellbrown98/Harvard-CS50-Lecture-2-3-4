@@ -127,8 +127,6 @@ def search():
 def bookinfo(isbn):
     bookid=isbn
     if request.method == "GET":
-        #store username incase they post/have posted a review
-        username = session["username"]
         #Search book by isbn
         search = db.execute("SELECT isbn, title, author, year FROM books WHERE \
                         isbn = :isbn",
@@ -138,13 +136,25 @@ def bookinfo(isbn):
 
         reviews = db.execute ("SELECT * FROM reviews WHERE isbn = :isbn",
                           {"isbn": bookid})
-
+        #if no reviews found, display page without passing review array
         if reviews.rowcount == 0:
             return render_template("book.html", bookinfo=bookinfo)
 
         return render_template("book.html", bookinfo=bookinfo, reviews=reviews)
 
     if request.method == "POST":
+
+        #verify the user has not already submitted a review for this book
+        unique = db.execute("SELECT * FROM reviews WHERE username = :username AND isbn = :isbn",
+                          {"username":session["username"],
+                           "isbn": bookid
+                             })
+
+        #show error if there is already a review for the book by the user
+        if unique.rowcount == 1:
+            return render_template("error2.html", message="You have already submitted 1 review for this book")
+
+        #add review to the table
         db.execute("INSERT INTO reviews (username, review, rating, isbn) VALUES (:username, :review, :rating, :isbn)",
                     {"username":session["username"],
                      "review":request.form.get("comments"),
@@ -154,6 +164,8 @@ def bookinfo(isbn):
         #Save changes
         db.commit()
         flash('Review submitted', 'success')
+
+        #re-query table and send to page
         search = db.execute("SELECT isbn, title, author, year FROM books WHERE \
                     isbn = :isbn",
                     {"isbn": bookid})
