@@ -18,7 +18,7 @@
     Number of Ratings: {{ Gbooks[1] }}
     <br><br>
 <b>Website Reviews:</b><br>
-    <table class="center" width="80%">
+    <table id="wreviews" class="center">
       <tr>
         <th>User</th>
         <th>Review</th>
@@ -31,13 +31,15 @@
         <td>{{r['rating']}}</td>
       </tr>
       {% endfor %}
-    </table><br>
+    </table><br><br>
 
 
-
-
+    <b> Submit Review </b> <br>
+    To submit a review, please enter a comment about the book
     <form action="/{{bookinfo[0]['isbn']}}" method="post">
-      <input type="text" id=comments name="comments" placeholder="Write Review here">
+      <textarea rows = "3" cols = "40" wrap="physical" name = "comments" id=comments name="comments">
+      </textarea><br>
+      ...and a rating from 1-5 (5 being the best)
       <select id="rating" name="rating" placeholder="Enter Rating">
         <option value="1">1</option>
         <option value="2">2</option>
