@@ -1,5 +1,4 @@
-# Project 1
-ENGO 551
+This project is based on Harvard CS50 Web Programming with Python and Javascript 2018 - Lecture 2 (Flask), Lecture 3 (SQL), and Lecture 4 (ORMS & APIs).
 
 application.py:
 This file is the main python application used to run the backend of the website. 
